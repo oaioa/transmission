@@ -74,7 +74,7 @@ int main(void)
                 while(1){
 					delete(buf,sizeof(buf));
                     recv = receive_message(s, buf,NULL,0);
-                    //printf("\nrecu: %d\n",recv);
+                    printf("\nrecu: %d\n",recv);
                     id_frag ++;//useful for ACK
                     if(strcmp(buf,"end")==0){
                         break;
@@ -88,7 +88,9 @@ int main(void)
                     //sending ACK
                     delete(message,sent);
                     sprintf(message,"ACK_%d",id_frag);
+                    sleep(3); //TEST
                     sent = send_message(s,message,20, (struct sockaddr *)&si_other, slen);
+                    printf("Envoyé: %d\n",sent);
                 }
                 
                 gettimeofday(&end, NULL);

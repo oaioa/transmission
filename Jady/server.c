@@ -66,7 +66,6 @@ int main(void)
         }
         else{ //une fois la connexion acceptée
             ENTREE = buf;
-            printf("hello!\n");
             if (access(ENTREE,0) == 0){
 				send_message(s,"OK",2,(struct sockaddr *)&si_other, slen);
 				
@@ -76,18 +75,24 @@ int main(void)
 					die("Probleme ouverture fichier\n");
 				}
 				
+				
+				
 				while (1){
 					read = fread(message,1,FRAGLEN,f_in);
 					//printf("\nRead: %d\n",read);
+					//gettimeofday(&start, NULL);
+					
 					if (read > 1){
 						sent = send_message(s,message,read,(struct sockaddr *)&si_other, slen);
-						//printf("Sent: %d\n",sent);
-						recv = receive_message(s, buf,(struct sockaddr *) &si_other, &slen);
-						//printf("Recv: %s de taille %d\n",buf, recv);
+						printf("Sent: %d\n",sent);
+						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen);
+						printf("Recv: %s de taille %d\n",buf, recv);
 					}
 					else{
 						break;
 					}
+					
+					
 				}
 				fseek(f_in, 0L, SEEK_END);
 				printf("Fichier de taille %d transmis avec succès\n\n",ftell(f_in));
