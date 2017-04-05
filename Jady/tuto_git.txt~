@@ -1,0 +1,26 @@
+On est dans le dossier
+	git init
+on recupere le lien
+	git clone https://github.com/oaioa/scv2.git
+on ouvre le dossier récuperer
+	cd scv2
+
+
+on fait un pull pour recuperer les versions les + récentes!!!
+	git pull
+on modifie/ajoute des fichiers et on enregistre
+	vim fichier
+on affiche que c'est bien tenu compte
+	git status
+on ajoute ce qu'on a modifié dans les modifiés
+	git add fichier
+//si jamais on veut tout ajouter
+	git add *
+on soumet
+	git commit -m "Un message"
+	git push -u origin master
+//on annule un commit PUIS on refait :
+	git reset HEAD~
+on insere l'identifiant + mot de passe
+
+ET VOILA!!!
