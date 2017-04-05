@@ -10,4 +10,5 @@ client: client.c useful.h
 	
 clean:
 	rm -f client server 
-	rm -rf *.o 
+	rm -rf *.o
+	rm recv
