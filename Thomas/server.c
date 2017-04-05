@@ -24,6 +24,15 @@ int main(void)
     int counter_fragment;
     int read = FRAGLEN,sent=0,recv=0;
     char * ENTREE = (char*) malloc(sizeof(char)* FRAGLEN); //what server is sending
+<<<<<<< HEAD
+=======
+
+    int rwnd = 1; //receiver window
+    int cwnd = 10; //congestion window
+    int flightSize = 0; //data that has been sent, but not yet acknowledged
+
+    int j = 0;
+>>>>>>> b7f4e59417406942f68cdeaa92320dce961c4344
 //
     if (create_server(&s, &si_me, PORT) != 0){
         die("Error on creating first server\n");
@@ -65,6 +74,7 @@ int main(void)
             }
         }
         else{ //une fois la connexion acceptée
+<<<<<<< HEAD
             ENTREE = buf;
             printf("hello!\n");
             if (access(ENTREE,0) == 0){
@@ -98,6 +108,50 @@ int main(void)
 				printf("Le fichier %s n'existe pas.\n", ENTREE);
 				send_message(s,"NOK",3,(struct sockaddr *)&si_other, slen);
 			}
+=======
+            ENTREE = "../explorers/src/a";
+            if (access(ENTREE,0) == 0){
+                send_message(s,"OK",2,(struct sockaddr *)&si_other, slen);
+
+                printf("\nEnvoi du fichier %s par %d\n",ENTREE,getpid());
+
+                if ((f_in = fopen(ENTREE,"rb")) == NULL){//b because nbinary
+                    die("Probleme ouverture fichier\n");
+                }
+
+                while (1){
+                    if(flightSize<cwnd){
+                        read = fread(message,1,FRAGLEN,f_in);
+                        //printf("\nRead: %d\n",read);
+                        if (read > 1){
+                            //usleep(1000000);
+                            sent = send_message(s,message,read,(struct sockaddr *)&si_other, slen);
+                            //printf("Sent: %d\n",sent);
+                            flightSize ++ ;
+                        }
+                        else{
+                            break;
+                        }
+
+                    }
+                    else{
+                        for(j=0;j<flightSize;j++){
+                            recv = receive_message(s, buf,(struct sockaddr *) &si_other, &slen);
+                            //printf("Recv: %s de taille %d\n",buf, recv);
+                        }
+                        flightSize = 0;
+                    }
+                }
+                fseek(f_in, 0L, SEEK_END);
+                printf("Fichier de taille %d transmis avec succès\n\n",ftell(f_in));
+                fclose(f_in);
+                send_message(s,"end",3,  (struct sockaddr *)&si_other, slen);
+            }
+            else{
+                printf("Le fichier %s n'existe pas.\n", ENTREE);
+                send_message(s,"NOK",3,(struct sockaddr *)&si_other, slen);
+            }
+>>>>>>> b7f4e59417406942f68cdeaa92320dce961c4344
         }
     }
     close(s);
