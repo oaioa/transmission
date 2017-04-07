@@ -24,6 +24,9 @@ int main(void)
     int counter_fragment;
     int read = FRAGLEN,sent=0,recv=0;
     char * ENTREE = (char*) malloc(sizeof(char)* FRAGLEN); //what server is sending
+	
+	struct timeval end, start;
+	float RTT;
 //
     if (create_server(&s, &si_me, PORT) != 0){
         die("Error on creating first server\n");
@@ -75,18 +78,24 @@ int main(void)
 					die("Probleme ouverture fichier\n");
 				}
 				
-				
-				
 				while (1){
 					read = fread(message,1,FRAGLEN,f_in);
 					//printf("\nRead: %d\n",read);
 					//gettimeofday(&start, NULL);
 					
 					if (read > 1){
+						gettimeofday(&start, NULL);
+						
 						sent = send_message(s,message,read,(struct sockaddr *)&si_other, slen);
-						printf("Sent: %d\n",sent);
+						//printf("Sent: %d\n",sent);
 						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen);
-						printf("Recv: %s de taille %d\n",buf, recv);
+						//printf("Recv: %s de taille %d\n",buf, recv);
+						
+						gettimeofday(&end, NULL);
+						RTT = ((end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f) / 1000.0f;
+						
+						printf("RTT: %f secondes\n", RTT);
+						
 					}
 					else{
 						break;
@@ -100,7 +109,11 @@ int main(void)
 				send_message(s,"end",3,  (struct sockaddr *)&si_other, slen);
 			}
 			else{
-				printf("Le fichier %s n'existe pas.\n", ENTREE);
+				if (strcmp(" ",ENTREE) != 0 && strcmp("",ENTREE) != 0){
+					printf("Le fichier '%s' n'existe pas.\n", ENTREE);
+				}else{
+					//printf("Pourquoi envoyer du vide?\n");
+				}
 				send_message(s,"NOK",3,(struct sockaddr *)&si_other, slen);
 			}
         }

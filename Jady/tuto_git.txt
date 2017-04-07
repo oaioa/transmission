@@ -18,12 +18,11 @@ on ajoute ce qu'on a modifié dans les modifiés
 	git add *
 on soumet
 	git commit -m "Un message"
-	git push -u origin master
-<<<<<<< HEAD
+	git push -u origin mastergi
 //on annule un commit PUIS on refait :
 	git reset HEAD~
-=======
->>>>>>> b7f4e59417406942f68cdeaa92320dce961c4344
+OU	git reset --hard HEAD~1
+OU	git reset --hard commit_sha
 on insere l'identifiant + mot de passe
 
 ET VOILA!!!

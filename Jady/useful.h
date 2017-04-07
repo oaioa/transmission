@@ -4,7 +4,7 @@
 #include<arpa/inet.h>
 #include<signal.h>
 #include<sys/socket.h>
-#include <sys/time.h>
+#include<sys/time.h>
 
 #define SERVER "127.0.0.1"
 #define FRAGLEN 1024 //Max length of ONE fragment from server: 1Mo
@@ -40,9 +40,17 @@ int send_message(int socket,char* message, size_t message_len,struct sockaddr *s
 //receive the message
 int receive_message(int socket, char* buf,struct sockaddr *si_other, int * si_other_len){
     int recv = -1;
+    struct timeval tv;
+
+	//set recvfrom as a blocking call
+	tv.tv_sec = 0;  // 5 secs Timeout
+	tv.tv_usec = 0; // 3000 µsec
+	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval )); 
+	
+    
     if ((recv = recvfrom(socket, buf, BUFLEN, 0, (struct sockaddr *) si_other, si_other_len)) == -1)
     {
-        die("recvfrom()");
+		perror("Error");
     }
     return recv;
 }
@@ -134,27 +142,22 @@ int insert_a_message(char ** message){
 	return 0;
 }
 
-void manageError(int n){
-	printf("FILS??? %d aurevoir!\n",getpid());
-	kill(getpid(),SIGINT);
-	
-}
 
 //receive the message with a timeout
 int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_other_len){
     int recv = -1;
     
     struct timeval tv;
-	tv.tv_sec = 2;  /* 3 Secs Timeout */
-	tv.tv_usec = 0; //µsec
+	tv.tv_sec = 5;  // 5 secs Timeout
+	tv.tv_usec = 3000; // 3000 µsec
 	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval ));
 	
     if ((recv = recvfrom(socket, buf, BUFLEN, 0, (struct sockaddr *) si_other, si_other_len)) < 0){
 		printf("TIMEOUT!\n");
-		rcv_msg_timeout(socket, buf,si_other, si_other_len);
+		//recv = rcv_msg_timeout(socket, buf,si_other, si_other_len);
 		
     }else{
-		printf("bien recu: %s de taille %d\n", buf,recv);
+		//printf("bien recu: %s de taille %d\n", buf,recv);
 	}
     return recv;
 }
