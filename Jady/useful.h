@@ -12,6 +12,7 @@
 #define PORT 5000   //The port on which to send data
 
 
+
 void die(char *s)
 {
     printf("Adios...\n");
@@ -148,7 +149,7 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
     int recv = -1;
     
     struct timeval tv;
-	tv.tv_sec = 5;  // 5 secs Timeout
+	tv.tv_sec = 1;  // 1 sec Timeout
 	tv.tv_usec = 3000; // 3000 µsec
 	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval ));
 	
@@ -160,4 +161,23 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
 		//printf("bien recu: %s de taille %d\n", buf,recv);
 	}
     return recv;
+}
+
+//Display the RTT in the background periodically
+int disp(int * previous, float * counting, int * read, int * display, int * displayer,float *RTT){
+	int pid;
+	
+	if (*displayer == 0){
+		*displayer = 1;
+		pid = fork();
+	}
+	
+	if (pid == 0){	
+		//display every seconde
+		if((*previous!= (int)*counting % *read)){
+			*display = (int)*counting % *read;
+			printf("RTT: %f secondes\n", *RTT);
+			*previous = *display;
+		}	
+	}
 }

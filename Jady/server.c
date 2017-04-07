@@ -25,8 +25,8 @@ int main(void)
     int read = FRAGLEN,sent=0,recv=0;
     char * ENTREE = (char*) malloc(sizeof(char)* FRAGLEN); //what server is sending
 	
-	struct timeval end, start;
-	float RTT;
+	struct timeval end, start, beginread;
+	float RTT=0, counting=0, previous, display=0, displayer = 0;
 //
     if (create_server(&s, &si_me, PORT) != 0){
         die("Error on creating first server\n");
@@ -78,26 +78,33 @@ int main(void)
 					die("Probleme ouverture fichier\n");
 				}
 				
+				gettimeofday(&beginread, NULL);
 				while (1){
 					read = fread(message,1,FRAGLEN,f_in);
 					//printf("\nRead: %d\n",read);
-					//gettimeofday(&start, NULL);
-					
 					if (read > 1){
 						gettimeofday(&start, NULL);
 						
 						sent = send_message(s,message,read,(struct sockaddr *)&si_other, slen);
-						//printf("Sent: %d\n",sent);
+						//printf("Sent: %d by %d\n",sent, getpid());
 						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen);
 						//printf("Recv: %s de taille %d\n",buf, recv);
 						
 						gettimeofday(&end, NULL);
 						RTT = ((end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f) / 1000.0f;
+						counting = ((end.tv_sec - beginread.tv_sec) * 1000.0f + (end.tv_usec - beginread.tv_usec) / 1000.0f) / 1000.0f;
 						
-						printf("RTT: %f secondes\n", RTT);
+						
+						//display every second BUT increases RTT (x2 or x3) -> need another independant process
+						if((previous!= (int)counting % read)){
+							display = (int)counting % read;
+							printf("RTT: %f secondes\n", RTT);
+							previous = display;
+						}	
 						
 					}
 					else{
+						
 						break;
 					}
 					
@@ -107,6 +114,7 @@ int main(void)
 				printf("Fichier de taille %d transmis avec succès\n\n",ftell(f_in));
 				fclose(f_in);
 				send_message(s,"end",3,  (struct sockaddr *)&si_other, slen);
+				delete(buf,strlen(buf));
 			}
 			else{
 				if (strcmp(" ",ENTREE) != 0 && strcmp("",ENTREE) != 0){

@@ -88,7 +88,7 @@ int main(void)
                     //sending ACK
                     delete(message,sent);
                     sprintf(message,"ACK_%d",id_frag);
-                    //sleep(3); //TEST
+                    //sleep(5); //TEST OF TIMEOUT
                     sent = send_message(s,message,20, (struct sockaddr *)&si_other, slen);
                     //printf("Envoyé: %d\n",sent);
                 }
