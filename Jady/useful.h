@@ -1,17 +1,19 @@
-#include<stdio.h> //printf
-#include<string.h> //memset
-#include<stdlib.h> //exit(0);
-#include<arpa/inet.h>
-#include<signal.h>
-#include<sys/socket.h>
-#include<sys/time.h>
+#include <stdio.h> //printf
+#include <string.h> //memset
+#include <stdlib.h> //exit(0);
+#include <pthread.h> //multithreading
+#include <arpa/inet.h>
+#include <math.h>
+#include <signal.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 
-#define SERVER "127.0.0.1"
+#define SERVER "127.0.0.2"
 #define FRAGLEN 1024 //Max length of ONE fragment from server: 1Mo
 #define BUFLEN 1000000000  //Max length of client buffer: 1Go
 #define PORT 5000   //The port on which to send data
 
-
+//generating a file of 5MBytes: dd if=/dev/zero of=a  bs=5M  count=1
 
 void die(char *s)
 {
@@ -44,8 +46,8 @@ int receive_message(int socket, char* buf,struct sockaddr *si_other, int * si_ot
     struct timeval tv;
 
 	//set recvfrom as a blocking call
-	tv.tv_sec = 0;  // 5 secs Timeout
-	tv.tv_usec = 0; // 3000 µsec
+	tv.tv_sec = 0;  // 0 secs Timeout
+	tv.tv_usec = 0; // 0 µsec
 	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval )); 
 	
     
@@ -149,13 +151,12 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
     int recv = -1;
     
     struct timeval tv;
-	tv.tv_sec = 1;  // 1 sec Timeout
+	tv.tv_sec = 5;  // 5 sec Timeout
 	tv.tv_usec = 3000; // 3000 µsec
 	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval ));
 	
     if ((recv = recvfrom(socket, buf, BUFLEN, 0, (struct sockaddr *) si_other, si_other_len)) < 0){
 		printf("TIMEOUT!\n");
-		//recv = rcv_msg_timeout(socket, buf,si_other, si_other_len);
 		
     }else{
 		//printf("bien recu: %s de taille %d\n", buf,recv);
@@ -163,21 +164,51 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
     return recv;
 }
 
+//TODO
 //Display the RTT in the background periodically
-int disp(int * previous, float * counting, int * read, int * display, int * displayer,float *RTT){
-	int pid;
-	
-	if (*displayer == 0){
-		*displayer = 1;
-		pid = fork();
-	}
-	
-	if (pid == 0){	
-		//display every seconde
-		if((*previous!= (int)*counting % *read)){
-			*display = (int)*counting % *read;
-			printf("RTT: %f secondes\n", *RTT);
-			*previous = *display;
-		}	
-	}
+
+
+
+
+
+
+
+//count the digits of a given number
+int count_digits(int i){
+   
+	if (i < 9)
+		return 1;
+	else if (i < 99)
+		return 2;
+	else if (i < 999)
+		return 3;
+	else if (i < 9999)
+		return 4;
+	else if (i < 99999)
+		return 5;
+	else if (i < 999999)
+		return 6;
+	else if (i < 9999999)
+		return 7;
+	else if (i < 99999999)
+		return 8;
+	else if (i < 999999999)
+		return 9;
+	else if (i < 9999999999)
+		return 10;
 }
+
+//Consider ONLY the n first digits of string s to convert into int (useful for CLIENT id_frag)
+int my_atoi(char* s, int n){
+	int i=0, res =0, temp = 0;
+	
+	for (i = 0 ; i<n ; i++){
+		temp = s[i] - '0';
+		res = res + temp*pow(10,n-i-1);
+	}
+	
+	return res;
+	
+}
+
+

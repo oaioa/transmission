@@ -8,8 +8,7 @@ http://www.binarytides.com/programming-udp-sockets-c-linux/
 
 int main(void)
 {
-//
-    struct sockaddr_in si_me;//server struct addr
+	struct sockaddr_in si_me;//server struct addr
     struct sockaddr_in si_other;//client struct addr
     int s; //socket 
     int slen = sizeof(si_other);
@@ -21,12 +20,14 @@ int main(void)
     int pid_fils = -1;
     int compare = 1 ; // il y a une difference
     FILE * f_in;
-    int counter_fragment;
+    int id_frag = 0, lastACK = 0;
     int read = FRAGLEN,sent=0,recv=0;
     char * ENTREE = (char*) malloc(sizeof(char)* FRAGLEN); //what server is sending
-	
+    
 	struct timeval end, start, beginread;
 	float RTT=0, counting=0, previous, display=0, displayer = 0;
+	char *id_frag_temp = (char*) malloc(sizeof(char)* 7);
+	char *res = (char*) malloc(sizeof(char)* FRAGLEN+7); //what's finally sent (id_frag + data)
 //
     if (create_server(&s, &si_me, PORT) != 0){
         die("Error on creating first server\n");
@@ -45,7 +46,7 @@ int main(void)
             if(compare==0){
                 PORT2 ++;
 
-                sprintf(message, "SYN-ACK_%d",PORT2);
+                sprintf(message, "SYN-ACK%d",PORT2);
 
                 send_message(s,message,15,  (struct sockaddr *)&si_other, slen);                
                 pid_fils = fork();
@@ -70,25 +71,35 @@ int main(void)
         else{ //une fois la connexion acceptée
             ENTREE = buf;
             if (access(ENTREE,0) == 0){
-				send_message(s,"OK",2,(struct sockaddr *)&si_other, slen);
+				//sends a "OK" to say that the 
+				//send_message(s,"OK",2,(struct sockaddr *)&si_other, slen);
 				
-				printf("\nEnvoi du fichier %s par %d\n",ENTREE,getpid());
+				printf("\nEnvoi du fichier %s par %d...\n",ENTREE,getpid());
 			
 				if ((f_in = fopen(ENTREE,"rb")) == NULL){//b because nbinary
 					die("Probleme ouverture fichier\n");
 				}
 				
 				gettimeofday(&beginread, NULL);
+				
 				while (1){
-					read = fread(message,1,FRAGLEN,f_in);
+					if (lastACK == id_frag){
+						read = fread(message,1,FRAGLEN,f_in);
+						id_frag++;
+					}
 					//printf("\nRead: %d\n",read);
+					
 					if (read > 1){
 						gettimeofday(&start, NULL);
 						
-						sent = send_message(s,message,read,(struct sockaddr *)&si_other, slen);
+						sprintf(res, "%0.6d%s\n",id_frag,message);//the 6 first digits are for the id_frag
+						sent = send_message(s,res,read,(struct sockaddr *)&si_other, slen);
 						//printf("Sent: %d by %d\n",sent, getpid());
+						
 						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen);
 						//printf("Recv: %s de taille %d\n",buf, recv);
+						lastACK = atoi(index(buf,'K')+1);
+						//printf("lastACK: %d\n",lastACK);
 						
 						gettimeofday(&end, NULL);
 						RTT = ((end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f) / 1000.0f;
@@ -96,11 +107,12 @@ int main(void)
 						
 						
 						//display every second BUT increases RTT (x2 or x3) -> need another independant process
-						if((previous!= (int)counting % read)){
+						if(recv>0 && (previous!= (int)counting % read)){
 							display = (int)counting % read;
 							printf("RTT: %f secondes\n", RTT);
 							previous = display;
-						}	
+						}
+						
 						
 					}
 					else{
@@ -113,19 +125,24 @@ int main(void)
 				fseek(f_in, 0L, SEEK_END);
 				printf("Fichier de taille %d transmis avec succès\n\n",ftell(f_in));
 				fclose(f_in);
-				send_message(s,"end",3,  (struct sockaddr *)&si_other, slen);
+				send_message(s,"FIN",3,  (struct sockaddr *)&si_other, slen);
 				delete(buf,strlen(buf));
 			}
 			else{
 				if (strcmp(" ",ENTREE) != 0 && strcmp("",ENTREE) != 0){
+					send_message(s,"FIN",3,  (struct sockaddr *)&si_other, slen);
 					printf("Le fichier '%s' n'existe pas.\n", ENTREE);
+					delete(buf,strlen(buf));
+					
 				}else{
 					//printf("Pourquoi envoyer du vide?\n");
 				}
-				send_message(s,"NOK",3,(struct sockaddr *)&si_other, slen);
 			}
         }
     }
     close(s);
-    return 0;
+
 }
+
+
+
