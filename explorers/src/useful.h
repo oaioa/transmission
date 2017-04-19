@@ -13,8 +13,7 @@
 #define SERVER "127.0.0.2"
 #define FRAGLEN 1024 //Max length of ONE fragment from server: 1Mo
 #define BUFLEN 1000000000  //Max length of client buffer: 1Go
-#define PORT 5000   //The port on which to send data
-#define INITIAL_CWND 1000
+//#define INITIAL_CWND 75000
 #define MAX_ACK_DUPLICATED 3
 #define INITIAL_RTT_MSEC 100
 
@@ -182,6 +181,7 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
 	//printf(ANSI_COLOR_RED "TIMEOUT: %lu sec & %lu µsec" ANSI_COLOR_RESET"\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
 	if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval ))<0){
 		perror("Erreur de timeout: ");
+		kill(getpid(),SIGINT);
 		exit(1);
 	}
 	

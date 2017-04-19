@@ -2,10 +2,14 @@
 
 CC=gcc
 CFLAGS= #-Wall
-all: server1-explorers
+all: first second third
 
-server1-explorers: server.c useful.h
-	$(CC) server.c -o ../bin/server1-explorers $(CFLAGS) -lm 
+first: server1.c useful.h
+	$(CC) server1.c -o ../bin/server1-explorers $(CFLAGS) -lm 
+second: server2.c useful.h
+	$(CC) server2.c -o ../bin/server2-explorers $(CFLAGS) -lm 
+third: server3.c useful.h
+	$(CC) server3.c -o ../bin/server3-explorers $(CFLAGS) -lm 
 	@echo Compilation terminée.
 clean:
 	rm -f ../bin/server*
