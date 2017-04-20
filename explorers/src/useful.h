@@ -168,30 +168,39 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
 		printf("Erreur de RTT! BYE\n");
 		exit(1);
 	}
+	
+    tv.tv_sec = 0;// 0 sec Timeout
     
     //depends on value of RTT
-    if (3*RTT_msec*1000 <=1000000){
-		tv.tv_sec = 0;// 0 sec Timeout
+    if (RTT_msec <=INITIAL_RTT_MSEC){ //if RTT less than initial one
+		//printf(ANSI_COLOR_RED "TIMEOUT OK" ANSI_COLOR_RESET"\n");
 		tv.tv_usec = 3* (RTT_msec*1000); // 3*RTT_µsec
 	}else{
-		tv.tv_sec = 3*RTT_msec / 1000;
-		tv.tv_usec = (3*(int)RTT_msec) % 1000;
+		printf(ANSI_COLOR_RED "TIMEOUT TROP GRAND!" ANSI_COLOR_RESET"\n");
+		tv.tv_usec = INITIAL_RTT_MSEC;
+		printf("On change en %lu msec\n",(long int)tv.tv_usec);
 	}
 	
 	//printf(ANSI_COLOR_RED "TIMEOUT: %lu sec & %lu µsec" ANSI_COLOR_RESET"\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
+	
 	if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval ))<0){
+		
+		printf(ANSI_COLOR_RED);
+		printf("Le RTT ne convient pas: %lu sec & %lu %sec\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
 		perror("Erreur de timeout: ");
+		printf(ANSI_COLOR_RESET);
 		kill(getpid(),SIGINT);
 		exit(1);
 	}
 	
     if ((recv = recvfrom(socket, buf, BUFLEN, 0, (struct sockaddr *) si_other, si_other_len)) < 0){
-		//printf("TIMEOUT!\n");
-		
+		//printf(ANSI_COLOR_RED "TIMEOUT REACHED: %lu sec & %lu µsec" ANSI_COLOR_RESET"\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
+	
     }else{
 		//printf("bien recu: %s de taille %d\n", buf,recv);
 	}
     return recv;
+    
 }
 
 
@@ -246,4 +255,15 @@ int min(int a, int b){
 		return a;
 	else
 		return b;
+}
+
+void displayGraph(int* tab, int len){
+	for (int i = 0 ; i < len ; i++){
+		if (tab[i] ==0)
+			break;
+		else
+			printf("%d, ",tab[i]);
+	}
+	printf("\n\n");
+	
 }

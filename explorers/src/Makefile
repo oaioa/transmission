@@ -14,3 +14,4 @@ third: server3.c useful.h
 clean:
 	rm -f ../bin/server*
 	rm -rf copy_*
+	rm -rf graph*
