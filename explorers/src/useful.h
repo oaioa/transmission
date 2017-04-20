@@ -172,13 +172,13 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
     tv.tv_sec = 0;// 0 sec Timeout
     
     //depends on value of RTT
-    if (RTT_msec <=INITIAL_RTT_MSEC){ //if RTT less than initial one
+    if (RTT_msec <=INITIAL_RTT_MSEC){ //if RTT small enough
 		//printf(ANSI_COLOR_RED "TIMEOUT OK" ANSI_COLOR_RESET"\n");
 		tv.tv_usec = 3* (RTT_msec*1000); // 3*RTT_µsec
 	}else{
-		printf(ANSI_COLOR_RED "TIMEOUT TROP GRAND!" ANSI_COLOR_RESET"\n");
+		//printf(ANSI_COLOR_RED "TIMEOUT TROP GRAND!\n");
 		tv.tv_usec = INITIAL_RTT_MSEC;
-		printf("On change en %lu msec\n",(long int)tv.tv_usec);
+		//printf("On change en %lu msec"ANSI_COLOR_RESET"\n",(long int)tv.tv_usec);
 	}
 	
 	//printf(ANSI_COLOR_RED "TIMEOUT: %lu sec & %lu µsec" ANSI_COLOR_RESET"\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
