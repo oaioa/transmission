@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	struct timeval end, start, beginread;
 	float RTT_msec = 0, delta =0;
 	char *res = (char*) malloc(sizeof(char) * FRAGLEN + 7); //what's finally sent (id_frag + data)
-
+	
 	int rwnd = 0; //receiver window
 	int cwnd = 0; //congestion window
 	int flightSize = 0; //data that has been sent, but not yet acknowledged
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 						//sending cwnd-1 fragments
 						while (flightSize < cwnd){
 							//sending normally
-							if (lastACK == 0 || lastACK >= id_frag){
+							if ((lastACK == 0 || lastACK >= id_frag)){
 								id_frag++;
 							}
 							//resending the lost fragment
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 							//printf("read: %d\n",read);
 							
 							//classic fragment of 1018 or last one
-							if (read >= 1) {
+							if (read >= 1 && id_frag<=id_lastfrag) {
 								
 								//preparing the fragment with id_frag number
 								sprintf(res, "%0.6d%s\n", id_frag, message);//the 6 first digits are for the id_frag
@@ -266,11 +266,10 @@ int main(int argc, char *argv[]) {
 				delta = ((end.tv_sec - beginread.tv_sec) * 1000.0f+ (end.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f;
 						
 				//printf("\nvery last ACK: %d\n", lastACK);
-				printf(ANSI_COLOR_BLUE"\nFichier de taille %f Ko envoyé\n",(float)len/1000);			
-				printf("Dernier RTT: %lf msec\n",RTT_msec );
-				printf("Durée d'envoi: %fsec\n",delta);		
-				printf("Débit moyen: %f Ko/s\n",len/(1024*delta));
-				printf("Terminé!" ANSI_COLOR_RESET"\n\n");
+				printf(ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyé\n",(float)len/1000);			
+				printf("Dernier RTT: " ANSI_COLOR_RED"%lf" ANSI_COLOR_BLUE" msec\n",RTT_msec );
+				printf("Durée d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",delta);		
+				printf("Débit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",len/(1024*delta));
 				
 				//receiving the very last(s) ACK
 				do{
@@ -281,17 +280,18 @@ int main(int argc, char *argv[]) {
 								
 				}while(recv >0);
 						
-				//displayGraph(graph,sizeof(int) * id_lastfrag);
-				//displayGraph(graphACK,sizeof(int) *100* id_lastfrag);
-				
 				fclose(f_in);
 				delete(buf, strlen(buf));
 				
-				if ((f_in = fopen("graph.txt","w")) == NULL) {	//w because writting
-					die("Probleme ouverture fichier graph.txt\n");
-				}
-				fwrite(graph,sizeof(int),sizeof(graph),f_in);
+				//displayGraph(graph,sizeof(int) * 100000 *id_lastfrag);
+				//displayGraph(graphACK,sizeof(int) *100000* id_lastfrag);
+				
+				outGraph(f_in, graph,sizeof(int) * 100000 *id_lastfrag,"graph.txt");
 				fclose(f_in);
+				outGraph(f_in, graphACK,sizeof(int) *100000* id_lastfrag,"graphACK.txt");
+				fclose(f_in);
+				
+				printf("Terminé!" ANSI_COLOR_RESET"\n\n");
 				
 				
 			} else {

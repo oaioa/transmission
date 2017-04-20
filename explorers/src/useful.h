@@ -258,12 +258,52 @@ int min(int a, int b){
 }
 
 void displayGraph(int* tab, int len){
-	for (int i = 0 ; i < len ; i++){
-		if (tab[i] ==0)
-			break;
-		else
-			printf("%d, ",tab[i]);
-	}
-	printf("\n\n");
+	int i = 0;
 	
+	for (i = 0 ; i < len ; i++){
+		
+		if (tab[i] ==0){
+			break;
+		}else{
+			printf("%d",tab[i]);
+			if (i < len-1 && tab[i+1] !=0){
+				printf(", ");
+			}
+		}
+	}
+	printf("\n");
+}
+
+void outGraph(FILE* f, int* tab, int len, char* graphName){
+	int i = 0;
+	
+	//if the graph already exists
+	if (access(graphName, 0) == 0) {
+		//printf(ANSI_COLOR_BLUE"Suppression de l'ancien %s...\n",graphName);
+		if (remove(graphName) != 0){
+			printf("Impossible de supprimer %s!\n",graphName);
+		}else{				
+			//printf("Suppression de %s OK\n",graphName);
+		}
+	}else{
+		//printf("Création du fichier %s...\n",graphName);
+	}
+	
+	if ((f= fopen(graphName,"a")) == NULL) {	//a because appending
+		die("Probleme ouverture fichier graph.txt\n");
+	}
+	
+	for (i = 0 ; i < len ; i++){
+		
+		if (tab[i] ==0){
+			break;
+		}else{
+			fprintf(f,"%d",tab[i]);
+			if (i < len-1 && tab[i+1] !=0){
+				fprintf(f,", ");
+			}
+		}
+	}
+	fprintf(f,"\n");
+	printf("Fichier " ANSI_COLOR_RED"%s" ANSI_COLOR_BLUE" créé.\n", graphName);
 }
