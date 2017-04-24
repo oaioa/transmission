@@ -274,6 +274,7 @@ void displayGraph(int* tab, int len){
 	printf("\n");
 }
 
+//export into a [graphName] file
 void outGraph(FILE* f, int* tab, int len, char* graphName){
 	int i = 0;
 	
@@ -281,7 +282,7 @@ void outGraph(FILE* f, int* tab, int len, char* graphName){
 	if (access(graphName, 0) == 0) {
 		//printf(ANSI_COLOR_BLUE"Suppression de l'ancien %s...\n",graphName);
 		if (remove(graphName) != 0){
-			printf("Impossible de supprimer %s!\n",graphName);
+			//printf("Impossible de supprimer %s!\n",graphName);
 		}else{				
 			//printf("Suppression de %s OK\n",graphName);
 		}
@@ -290,20 +291,22 @@ void outGraph(FILE* f, int* tab, int len, char* graphName){
 	}
 	
 	if ((f= fopen(graphName,"a")) == NULL) {	//a because appending
-		die("Probleme ouverture fichier graph.txt\n");
-	}
-	
-	for (i = 0 ; i < len ; i++){
-		
-		if (tab[i] ==0){
-			break;
-		}else{
-			fprintf(f,"%d",tab[i]);
-			if (i < len-1 && tab[i+1] !=0){
-				fprintf(f,", ");
+		die("Probleme ouverture fichier de graphe\n");
+	}else{
+		//printf("Ecriture du fichier %s\n",graphName);
+		for (i = 0 ; i < len ; i++){ 
+			if (tab[i] ==0){
+				break;
+			}else{
+				fprintf(f,"%d",tab[i]);
+				if (i < len-1 && tab[i+1] !=0){
+					fprintf(f,",");
+				}
 			}
 		}
+		//printf("Ecriture terminée!\n");	
 	}
+	
 	fprintf(f,"\n");
 	printf("Fichier " ANSI_COLOR_RED"%s" ANSI_COLOR_BLUE" créé.\n", graphName);
 }

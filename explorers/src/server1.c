@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 			if (access(ENTREE, 0) == 0) {
 				printf(ANSI_COLOR_BLUE"\nEnvoi du fichier %s par %d...\n", ENTREE, getpid());
 
-				if ((f_in = fopen(ENTREE, "rb")) == NULL) {	//b because nbinary
+				if ((f_in = fopen(ENTREE, "rb")) == NULL) {	//b because binary
 					die("Probleme ouverture fichier\n");
 				}
 				
