@@ -124,17 +124,13 @@ int main(int argc, char *argv[]) {
 				//At the beginning of sending mode
 				if(len <= 25600){//0.25Mo
 					INITIAL_CWND = id_lastfrag;
-				}else if (len <= 500000){//0.5Mo
-					INITIAL_CWND = 50;
-				}else if (len <= 1000000){//1Mo
+				}else if (len <= 512000){//0.5Mo
 					INITIAL_CWND = 100;
-				}else if (len <= 2000000){//2Mo
+				}else {//1Mo or more
 					INITIAL_CWND = 200;
-				}else {//3Mo or more
-					INITIAL_CWND = 500;
 				}
 				
-				printf("initial: %d\n",INITIAL_CWND);
+				//printf("initial: %d\n",INITIAL_CWND);
 				cwnd = INITIAL_CWND; //sending first INITIAL_CWND
 				RTT_msec = INITIAL_RTT_MSEC;//waits INITIAL_RTT_MSEC for timeout
 				
