@@ -12,7 +12,7 @@
 
 #define SERVER "127.0.0.2"
 #define FRAGLEN 1500 //Max length of ONE fragment from server: 1500
-#define BUFLEN 1000000000  //Max length of client buffer: 1Go
+#define BUFLEN 10000000  //Max length of server buffer: 10Mo
 #define MAX_ACK_DUPLICATED 3
 #define INITIAL_RTT_MSEC 100
 #define INITIAL_CWND 200
@@ -310,3 +310,35 @@ void outGraph(FILE* f, int* tab, int len, char* graphName){
 	fprintf(f,"\n");
 	printf("Fichier " ANSI_COLOR_RED"%s" ANSI_COLOR_BLUE" créé.\n", graphName);
 }
+
+int seek(void* dest,void* src,int id_frag, int id_lastfrag, int filesize){
+	
+	int counter = 0;
+	void* visitor = src;
+	int res = 0;
+	
+	//not the last one
+	if (id_frag < id_lastfrag){
+		memcpy(dest,visitor + (FRAGLEN-6)*(id_frag-1),FRAGLEN-6);
+		res = FRAGLEN-6;
+	
+	//the last fragment
+	}else if (id_frag == id_lastfrag){
+		//count the bits inside the last fragment
+		counter = filesize%(FRAGLEN-6);
+		
+		//copy the last fragment 
+		memcpy(dest,visitor + (FRAGLEN-6)*(id_frag-1),counter);
+		res = counter;
+	
+	//outside the data	
+	}else if (id_frag > id_lastfrag){
+		res = -1;
+	}
+	
+	return res;			
+}
+
+
+
+

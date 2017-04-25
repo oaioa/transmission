@@ -114,16 +114,29 @@ int main(int argc, char *argv[]) {
 				printf("Nb de fragments: %d" ANSI_COLOR_RESET"\n\n",id_lastfrag);
 				fseek(f_in,0,SEEK_SET);
 				
+				//printf("getting the time...\n");
 				gettimeofday(&beginread, NULL);
+				//printf("getting the time OK\n");
+				
 				
 				//At the beginning of sending mode
 				cwnd = INITIAL_CWND; //sending first INITIAL_CWND
 				RTT_msec = INITIAL_RTT_MSEC;//waits INITIAL_RTT_MSEC for timeout
 				
-				
+				//printf("Init graphs...\n");				
 				graph = (int*) malloc(sizeof(int) * 100000*id_lastfrag);
 				graphACK = (int*) malloc(sizeof(int) * 100000*id_lastfrag);
-				//id_frag = 0, lastACK = 0, id_lastfrag =  0, oldACK=0, nb_ACK=0, firstprint_SS=0, currentACK=0;
+				//printf("Init OK!\n");
+				
+				printf("copying into buffer...\n");
+				//copy the file inside a very big buffer
+				char* data = (char*) malloc(sizeof(char) * len);
+				printf("creating buffer ok\n");
+				fread(data,1,len,f_in);
+				printf("reading ok\n");
+				fclose(f_in);
+				printf("copy done!\n");
+				
 				
 				while (1) {
 						
@@ -152,22 +165,14 @@ int main(int argc, char *argv[]) {
 							//resetting the last ACK received as 0 because sending data mode...
 							lastACK = 0;
 							
-							//printf("Seeking...\n");
-							fseek(f_in,(id_frag-1)*(FRAGLEN-6),SEEK_SET);
-							//printf("id_frag: %d\n",id_frag);
-							//printf("curseur: %d\n",ftell(f_in));
-							if ((ftell(f_in)%(FRAGLEN-6))>0){
-								printf(ANSI_COLOR_RED"Probleme de curseur! %dè fragment au %d" ANSI_COLOR_RESET"\n",id_frag,ftell(f_in));
-								exit(1);
-							}
-							
-							//printf("reading...\n");
-							read = fread(message, 1, FRAGLEN-6, f_in);
-							//printf("read: %d\n",read);
+							//printf("seeking %d\n...",id_frag);
+							//getting the fragment to send
+							read = seek(message,data,id_frag,id_lastfrag,len);
 							
 							//classic fragment of 1018 or last one
 							if (read >= 1 && id_frag<=id_lastfrag) {
-								
+								//printf("seeking %d OK\n",id_frag);
+							
 								//preparing the fragment with id_frag number
 								sprintf(res, "%0.6d", id_frag);//the 6 first digits are for the id_frag
 								memcpy(res+6,message,FRAGLEN-6);
@@ -292,7 +297,6 @@ int main(int argc, char *argv[]) {
 								
 				}while(recv >0);
 						
-				fclose(f_in);
 				delete(buf, strlen(buf));
 				
 				//displayGraph(graph,sizeof(int) * 100000 *id_lastfrag);
