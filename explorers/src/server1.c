@@ -25,12 +25,13 @@ int main(int argc, char *argv[]) {
 	struct timeval end, start, beginread;
 	float RTT_msec = 0, delta =0;
 	void *res = (void*) malloc(sizeof(char) * FRAGLEN + 7); //what's finally sent (id_frag + data)
+	int set_time = -1;
 	
 	int rwnd = 0; //receiver window
 	int cwnd = 0; //congestion window
 	int flightSize = 0; //data that has been sent, but not yet acknowledged
-	int ssthresh = 2147483647;
 	int PORT=0, PORT2=0;
+	int INITIAL_CWND = 0;
 	
 	//useful for graphs
 	int *graph = NULL;
@@ -121,6 +122,19 @@ int main(int argc, char *argv[]) {
 				
 				
 				//At the beginning of sending mode
+				if(len <= 25600){//0.25Mo
+					INITIAL_CWND = id_lastfrag;
+				}else if (len <= 500000){//0.5Mo
+					INITIAL_CWND = 50;
+				}else if (len <= 1000000){//1Mo
+					INITIAL_CWND = 100;
+				}else if (len <= 2000000){//2Mo
+					INITIAL_CWND = 200;
+				}else {//3Mo or more
+					INITIAL_CWND = 500;
+				}
+				
+				printf("initial: %d\n",INITIAL_CWND);
 				cwnd = INITIAL_CWND; //sending first INITIAL_CWND
 				RTT_msec = INITIAL_RTT_MSEC;//waits INITIAL_RTT_MSEC for timeout
 				
@@ -186,13 +200,15 @@ int main(int argc, char *argv[]) {
 								
 								//useful for RTT
 								//printf("getting time...\n");
-								gettimeofday(&start, NULL);
+								if (set_time == -1){
+									gettimeofday(&start, NULL);
+									set_time = 0;
+								}
 								//printf("getting time ok!\n");
 							}
 							else {
 								//printf("EOF reached!\n");
 								id_frag--;
-								flightSize =cwnd;
 								break;
 							}
 							
@@ -216,8 +232,10 @@ int main(int argc, char *argv[]) {
 											
 						}while(lastACK < id_lastfrag && recv >0);
 						
-						gettimeofday(&end, NULL);
-						
+						if (set_time == 0){
+							gettimeofday(&end, NULL);
+							set_time = -1;
+						}
 						
 						//if there's no new ACK
 						if (lastACK ==0)

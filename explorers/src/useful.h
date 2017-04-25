@@ -15,7 +15,6 @@
 #define BUFLEN 10000000  //Max length of server buffer: 10Mo
 #define MAX_ACK_DUPLICATED 3
 #define INITIAL_RTT_MSEC 100
-#define INITIAL_CWND 200
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
