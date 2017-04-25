@@ -11,11 +11,11 @@
 #include <sys/stat.h>
 
 #define SERVER "127.0.0.2"
-#define FRAGLEN 1024 //Max length of ONE fragment from server: 1Mo
+#define FRAGLEN 1500 //Max length of ONE fragment from server: 1500
 #define BUFLEN 1000000000  //Max length of client buffer: 1Go
-//#define INITIAL_CWND 75000
 #define MAX_ACK_DUPLICATED 3
 #define INITIAL_RTT_MSEC 100
+#define INITIAL_CWND 200
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
