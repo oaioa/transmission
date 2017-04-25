@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
 	int id_frag = 0, lastACK = 0, id_lastfrag =  0, oldACK=0, nb_ACK=0, firstprint_SS=0,currentACK=0;
 	int read = FRAGLEN, sent = 0, recv = 0, len =0;
 	char * ENTREE = (char*) malloc(sizeof(char) * FRAGLEN); //what server is sending
+	char* data; 
 	
 	struct timeval end, start, beginread;
 	float RTT_msec = 0, delta =0;
@@ -128,14 +129,10 @@ int main(int argc, char *argv[]) {
 				graphACK = (int*) malloc(sizeof(int) * 100000*id_lastfrag);
 				//printf("Init OK!\n");
 				
-				printf("copying into buffer...\n");
 				//copy the file inside a very big buffer
-				char* data = (char*) malloc(sizeof(char) * len);
-				printf("creating buffer ok\n");
+				data = (char*) malloc(sizeof(char) * len);
 				fread(data,1,len,f_in);
-				printf("reading ok\n");
 				fclose(f_in);
-				printf("copy done!\n");
 				
 				
 				while (1) {
