@@ -135,8 +135,8 @@ int main(int argc, char *argv[]) {
 				RTT_msec = INITIAL_RTT_MSEC;//waits INITIAL_RTT_MSEC for timeout
 				
 				//printf("Init graphs...\n");				
-				graph = (int*) malloc(sizeof(int) * 100000*id_lastfrag);
-				graphACK = (int*) malloc(sizeof(int) * 100000*id_lastfrag);
+				graph = (int*) malloc(sizeof(int) * 100000);
+				graphACK = (int*) malloc(sizeof(int) * 100000);
 				//printf("Init OK!\n");
 				
 				//copy the file inside a very big buffer
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
 							//getting the fragment to send
 							read = seek(message,data,id_frag,id_lastfrag,len);
 							
-							//classic fragment of 1018 or last one
+							//classic fragment of FRAGLEN-6 or last one
 							if (read >= 1 && id_frag<=id_lastfrag) {
 								//printf("seeking %d OK\n",id_frag);
 							
@@ -187,12 +187,16 @@ int main(int argc, char *argv[]) {
 								//sending fragments while the threshold isn't reached
 								sent = send_message(s, res, read+6,(struct sockaddr *) &si_other, slen);
 								//printf("sent: id_%d of %d\n",id_frag,sent);
+								
 								flightSize++;
 								
-								//useful for graph
-								graph[loopCounter] = id_frag;
-								//printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
-								loopCounter++;
+								//useful for graph (only if the file is smaller than 10Mo
+								if (loopCounter < sizeof(int) * 100000){
+									//printf("we update graph[%d] to %d\n",loopCounter,graph[loopCounter]);
+									graph[loopCounter] = id_frag;
+									//printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
+									loopCounter++;
+								}
 								
 								//useful for RTT
 								//printf("getting time...\n");
@@ -208,10 +212,10 @@ int main(int argc, char *argv[]) {
 								break;
 							}
 							
-							//printf("end of while\n");
+							//printf("end of while, flightSize: %d cwnd: %d \n",flightSize,cwnd);
 						}
 						
-							
+						
 						//reading the receiving buffer while there are the ACK
 						do{
 							recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen,RTT_msec);
@@ -221,10 +225,12 @@ int main(int argc, char *argv[]) {
 							if (lastACK < currentACK && currentACK > oldACK)
 								lastACK = currentACK;
 								
-							graphACK[loopCounterACK] = currentACK;
-							//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
-							loopCounterACK++;
-								
+							if (loopCounterACK < sizeof(int) * 100000){
+								//printf("On fait graphACK[%d] égal à %d\n",loopCounterACK,graph[loopCounterACK]);
+								graphACK[loopCounterACK] = currentACK;
+								//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
+								loopCounterACK++;
+							}
 											
 						}while(lastACK < id_lastfrag && recv >0);
 						

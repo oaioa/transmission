@@ -1,7 +1,6 @@
 #include <stdio.h> //printf
 #include <string.h> //memset
 #include <stdlib.h> //exit(0);
-#include <pthread.h> //multithreading
 #include <arpa/inet.h>
 #include <math.h>
 #include <signal.h>
@@ -163,9 +162,13 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
     int recv = -1;
     struct timeval tv;
     
+    
+    
     if (RTT_msec <= 0){
 		printf("Erreur de RTT! BYE\n");
 		exit(1);
+	}else{
+		//printf(ANSI_COLOR_RED "RTT OK: %lf" ANSI_COLOR_RESET"\n",RTT_msec);
 	}
 	
     tv.tv_sec = 0;// 0 sec Timeout
