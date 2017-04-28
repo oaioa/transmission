@@ -134,8 +134,8 @@ int main(int argc, char *argv[]) {
 				RTT_microsec = INITIAL_RTT_MICROSEC; //waits INITIAL_RTT_MICROSEC for timeout
 
 				//printf("Init graphs...\n");				
-				graph = (int*) malloc(sizeof(int) * 100000);
-				graphACK = (int*) malloc(sizeof(int) * 100000);
+				graph = (int*) malloc(sizeof(int) * 200001);
+				graphACK = (int*) malloc(sizeof(int) * 200001);
 				//printf("Init OK!\n");
 
 				//copy completely the file inside a very big buffer
@@ -183,8 +183,9 @@ int main(int argc, char *argv[]) {
 							
 							flightSize++;
 							
-							if (loopCounter < 100000) { //to not get out of int* graph borders
+							if (loopCounter < 200000) { //to not get out of int* graph borders
 								graph[loopCounter] = id_frag;
+								//printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
 								loopCounter++;
 							}
 							//useful for RTT
@@ -209,9 +210,9 @@ int main(int argc, char *argv[]) {
 						if (lastACK < currentACK && currentACK > oldACK)
 							lastACK = currentACK;
 
-						if (loopCounterACK < 100000) { //to not get out of int* graph borders200000) { //to not get out of int* graphACK borders
+						if (loopCounterACK < 200000) { //to not get out of int* graph borders200000) { //to not get out of int* graphACK borders
 							graphACK[loopCounterACK] = currentACK;
-							//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
+							//printf("graphACK[%d] = %d\n",loopCounterACK,graphACK[loopCounterACK]);
 							loopCounterACK++;
 						}
 
