@@ -252,7 +252,7 @@ void displayGraph(int* tab, int len){
 	for (i = 0 ; i < len ; i++){
 		
 		if (tab[i] ==0){
-			break;
+			//break;
 		}else{
 			printf("%d",tab[i]);
 			if (i < len-1 && tab[i+1] !=0){
