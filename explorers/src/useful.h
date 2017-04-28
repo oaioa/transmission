@@ -396,3 +396,13 @@ int getACK(char* s, int n){
 	
 }
 
+//get the 2nd number after the coma
+int digitAfterComa(double tmpTime){
+	int n = 0;
+	int tmp =  floor(tmpTime*100);
+	n = (int) (tmp %100);
+	
+	return n;
+	
+}
+

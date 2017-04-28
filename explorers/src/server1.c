@@ -39,9 +39,12 @@ int main(int argc, char *argv[]) {
 	int loopCounter = 0;
 	int *graphACK;
 	int loopCounterACK = 0;
+	int digit = 0, oldDigit = 0;
 	//abscisse of graphs: time
-	struct timeval stopgraph, stopgraphACK; 
+	struct timeval stopgraph, stopgraphACK;
 	double *deltagraph, *deltagraphACK;
+	double tmpTimeGraph = 0;
+	
 	
 
 	if (argc < 2) {
@@ -191,14 +194,18 @@ int main(int argc, char *argv[]) {
 							
 							flightSize++;
 							
-							if (loopCounter < 200000) { //to not get out of int* graph borders
+							gettimeofday(&stopgraph, NULL);
+							tmpTimeGraph= ((stopgraph.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraph.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f; //in msec
+							digit = digitAfterComa(tmpTimeGraph);
+							
+							if (loopCounter < 200000 && digit!=oldDigit) { //to not get out of int* graph borders
 								graph[loopCounter] = id_frag;
 								//printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
-								gettimeofday(&stopgraph, NULL);
-								deltagraph[loopCounter] = ((stopgraph.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraph.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f;
+								deltagraph[loopCounter] = tmpTimeGraph;
 								//printf("deltagraph[%d] = %f\n",loopCounter,deltagraph[loopCounter]);
 								loopCounter++;
 							}
+							
 							//useful for RTT
 							//printf("getting time...\n");
 							if (set_time == -1) {
@@ -206,7 +213,7 @@ int main(int argc, char *argv[]) {
 								set_time = 0;
 							}
 							
-							
+							oldDigit = digit;
 							
 						} else {
 							//printf("EOF reached!\n");
@@ -223,15 +230,19 @@ int main(int argc, char *argv[]) {
 						if (lastACK < currentACK && currentACK > oldACK)
 							lastACK = currentACK;
 
-						if (loopCounterACK < 200000) { //to not get out of int* graphACK borders
+						gettimeofday(&stopgraphACK, NULL);
+						tmpTimeGraph= ((stopgraphACK.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraphACK.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f; //in msec
+						digit = digitAfterComa(tmpTimeGraph);
+							
+						if (loopCounterACK < 200000 && digit!=oldDigit) { //to not get out of int* graphACK borders
 							graphACK[loopCounterACK] = currentACK;
 							//printf("graphACK[%d] = %d\n",loopCounterACK,graphACK[loopCounterACK]);
-							gettimeofday(&stopgraphACK, NULL);
 							deltagraphACK[loopCounterACK] = ((stopgraphACK.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraphACK.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f;
 							//printf("deltagraphACK[%d] = %f\n",loopCounterACK,deltagraphACK[loopCounterACK]);
 							loopCounterACK++;
 						}
-
+						oldDigit = digit;
+						
 					} while (lastACK < id_lastfrag && recv > 0);
 
 					if (set_time == 0) {
@@ -295,15 +306,23 @@ int main(int argc, char *argv[]) {
 				printf("Débit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",len / (1024 * delta));
 
 				//receiving the very last(s) ACK
+				gettimeofday(&stopgraphACK, NULL);
 				do {
 					recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen, 1);
-					graphACK[loopCounterACK] = lastACK;
-					//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
 					gettimeofday(&stopgraphACK, NULL);
-					deltagraphACK[loopCounterACK] = ((stopgraphACK.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraphACK.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f;
-					//printf("deltagraphACK[%d] = %f\n",loopCounterACK,deltagraphACK[loopCounterACK]);
-					loopCounterACK++;
-
+					tmpTimeGraph= ((stopgraphACK.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraphACK.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f; //in msec
+					digit = digitAfterComa(tmpTimeGraph);
+					
+					if (loopCounterACK < 200000 && digit!=oldDigit) { //to not get out of int* graphACK borders
+						graphACK[loopCounterACK] = lastACK;
+						//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
+						deltagraphACK[loopCounterACK] = ((stopgraphACK.tv_sec - beginread.tv_sec) * 1000.0f+ (stopgraphACK.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f;
+						//printf("deltagraphACK[%d] = %f\n",loopCounterACK,deltagraphACK[loopCounterACK]);
+						loopCounterACK++;
+					}
+					
+					oldDigit = digit;
+					
 				} while (recv > 0);
 
 				delete(buf, strlen(buf));
