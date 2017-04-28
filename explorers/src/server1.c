@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
 						
 						if (loopCounter < 200000) { //to not get out of int* graph borders
 							graph[loopCounter] = id_frag;
-							printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
+							//printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
 							loopCounter++;
 						}
 						//useful for RTT
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 
 					if (loopCounterACK < 200000) { //to not get out of int* graphACK borders
 						graphACK[loopCounterACK] = currentACK;
-						printf("graphACK[%d] = %d\n",loopCounterACK,graphACK[loopCounterACK]);
+						//printf("graphACK[%d] = %d\n",loopCounterACK,graphACK[loopCounterACK]);
 						loopCounterACK++;
 					}
 
