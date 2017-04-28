@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
 
 			//printf("\nvery last ACK: %d\n", lastACK);
 			printf(ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyé\n",	(float) len / 1000);
-			printf("Dernier RTT: " ANSI_COLOR_RED"%f" ANSI_COLOR_BLUE" msec\n", (float) (RTT_microsec/1000));
+			printf("Dernier RTT: " ANSI_COLOR_RED"%d " ANSI_COLOR_BLUE" µsec\n", RTT_microsec);
 			printf("Durée d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",delta);
 			printf("Débit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",len / (1024 * delta));
 
