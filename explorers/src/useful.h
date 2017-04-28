@@ -12,7 +12,6 @@
 #define SERVER "127.0.0.2"
 #define FRAGLEN 1500 //Max length of ONE fragment from server: 1500
 #define BUFLEN 10000000  //Max length of server buffer: 10Mo
-#define MAX_ACK_DUPLICATED 3
 #define INITIAL_RTT_MICROSEC 100000
 
 #define ANSI_COLOR_RED     "\x1b[31m"
