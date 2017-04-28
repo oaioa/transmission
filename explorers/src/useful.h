@@ -13,7 +13,7 @@
 #define FRAGLEN 1500 //Max length of ONE fragment from server: 1500
 #define BUFLEN 10000000  //Max length of server buffer: 10Mo
 #define MAX_ACK_DUPLICATED 3
-#define INITIAL_RTT_MSEC 100
+#define INITIAL_RTT_MICROSEC 100000
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -158,32 +158,30 @@ int insert_a_message(char ** message){
 
 
 //receive the message with a timeout
-int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_other_len, float RTT_msec){
+int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_other_len, int RTT_microsec){
     int recv = -1;
     struct timeval tv;
     
-    
-    
-    if (RTT_msec <= 0){
+    //C'EST ICI QUE CA BUG SA MERE AU BOUT D'ENVIRONS 13000FRAGMENTS
+    if (RTT_microsec <= 0){
 		printf("Erreur de RTT! BYE\n");
 		exit(1);
 	}else{
-		//printf(ANSI_COLOR_RED "RTT OK: %lf" ANSI_COLOR_RESET"\n",RTT_msec);
+		//printf(ANSI_COLOR_RED "RTT OK: %d µsec" ANSI_COLOR_RESET"\n",RTT_microsec);
 	}
 	
     tv.tv_sec = 0;// 0 sec Timeout
     
     //depends on value of RTT
-    if (RTT_msec <=INITIAL_RTT_MSEC){ //if RTT small enough
+    if (RTT_microsec <=INITIAL_RTT_MICROSEC){ //if RTT small enough
 		//printf(ANSI_COLOR_RED "TIMEOUT OK" ANSI_COLOR_RESET"\n");
-		tv.tv_usec = 3* (RTT_msec*1000); // 3*RTT_µsec
+		tv.tv_usec = 3* RTT_microsec;
 	}else{
 		//printf(ANSI_COLOR_RED "TIMEOUT TROP GRAND!\n");
-		tv.tv_usec = INITIAL_RTT_MSEC;
-		//printf("On change en %lu msec"ANSI_COLOR_RESET"\n",(long int)tv.tv_usec);
+		tv.tv_usec = INITIAL_RTT_MICROSEC;
+		//printf("On change en %lu microsec"ANSI_COLOR_RESET"\n",(long int)tv.tv_usec);
 	}
 	
-	//printf(ANSI_COLOR_RED "TIMEOUT: %lu sec & %lu µsec" ANSI_COLOR_RESET"\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
 	
 	if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&tv,sizeof(struct timeval ))<0){
 		
@@ -195,12 +193,14 @@ int rcv_msg_timeout(int socket, char* buf,struct sockaddr *si_other, int * si_ot
 		exit(1);
 	}
 	
-    if ((recv = recvfrom(socket, buf, BUFLEN, 0, (struct sockaddr *) si_other, si_other_len)) < 0){
+	if ((recv = recvfrom(socket, buf, BUFLEN, 0, (struct sockaddr *) si_other, si_other_len)) < 0){
 		//printf(ANSI_COLOR_RED "TIMEOUT REACHED: %lu sec & %lu µsec" ANSI_COLOR_RESET"\n",(long int) tv.tv_sec, (long int)tv.tv_usec);
 	
     }else{
 		//printf("bien recu: %s de taille %d\n", buf,recv);
 	}
+	
+	
     return recv;
     
 }
@@ -229,19 +229,6 @@ int count_digits(int i){
 		return 9;
 	else if (i < 9999999999)
 		return 10;
-}
-
-//Consider ONLY the n first digits of string s to convert into int (useful for CLIENT id_frag)
-int my_atoi(char* s, int n){
-	int i=0, res =0, temp = 0;
-	
-	for (i = 0 ; i<n ; i++){
-		temp = s[i] - '0';
-		res = res + temp*pow(10,n-i-1);
-	}
-	
-	return res;
-	
 }
 
 int max(int a, int b){
@@ -337,10 +324,20 @@ int seek(void* dest,void* src,int id_frag, int id_lastfrag, int filesize){
 	}else if (id_frag > id_lastfrag){
 		res = -1;
 	}
-	
 	return res;			
 }
 
 
-
+//get the 6digits number from ACK[NUMBER]
+int getACK(char* s, int n){
+	int i=0, res =0, temp = 0;
+	
+	for (i = 3 ; i<=n+2 ; i++){
+		temp = s[i] - '0';
+		res = res + temp*pow(10,n-i+2);
+	}
+	
+	return res;
+	
+}
 

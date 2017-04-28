@@ -17,14 +17,14 @@ int main(int argc, char *argv[]) {
 	int pid_fils = -1;
 	int compare = 1; // il y a une difference
 	FILE * f_in;
-	int id_frag = 0, lastACK = 0, id_lastfrag = 0, oldACK = 0, nb_ACK = 0,
-			firstprint_SS = 0, currentACK = 0;
+	int id_frag = 0, lastACK = 0, id_lastfrag = 0, oldACK = 0, nb_ACK = 0, firstprint_SS = 0, currentACK = 0;
 	int read = FRAGLEN, sent = 0, recv = 0, len = 0;
 	char * ENTREE = (char*) malloc(sizeof(char) * FRAGLEN); //what server is sending
 	char* data;
 
 	struct timeval end, start, beginread;
-	float RTT_msec = 0, delta = 0;
+	int RTT_microsec = 0;
+	double delta = 0;
 	void *res = (void*) malloc(sizeof(char) * FRAGLEN + 7); //what's finally sent (id_frag + data)
 	int set_time = -1;
 
@@ -41,8 +41,7 @@ int main(int argc, char *argv[]) {
 	int loopCounterACK = 0;
 
 	if (argc < 2) {
-		printf(
-				ANSI_COLOR_RED "./server1-explorers server_port" ANSI_COLOR_RESET"\n");
+		printf(ANSI_COLOR_RED "./server1-explorers server_port" ANSI_COLOR_RESET"\n");
 		exit(1);
 	} else {
 		PORT = atoi(argv[1]);
@@ -50,8 +49,7 @@ int main(int argc, char *argv[]) {
 			PORT2 = PORT;
 			printf("port: %d\n", PORT);
 		} else {
-			printf(
-					ANSI_COLOR_RED"Error: 1023 <server_port < 9999! " ANSI_COLOR_RESET"\n");
+			printf(ANSI_COLOR_RED"Error: 1023 < server_port < 9999! " ANSI_COLOR_RESET"\n");
 			exit(1);
 		}
 	}
@@ -90,8 +88,7 @@ int main(int argc, char *argv[]) {
 					//printf("PERE %d de port %d\n", getpid(), PORT);
 					sprintf(message, "SYN-ACK%d", PORT2);
 					sleep(1);
-					send_message(s, message, 15, (struct sockaddr *) &si_other,
-							slen);
+					send_message(s, message, 15, (struct sockaddr *) &si_other,slen);
 					compare = 1;
 					continue;
 
@@ -104,11 +101,10 @@ int main(int argc, char *argv[]) {
 		} else {
 			ENTREE = buf;
 
-			if (access(ENTREE, 0) == 0) {
-				printf(ANSI_COLOR_BLUE"\nEnvoi du fichier %s par %d...\n",
-						ENTREE, getpid());
+			//if (access(ENTREE, 0) == 0) {
+				printf(ANSI_COLOR_BLUE"\nEnvoi du fichier %s par %d...\n",ENTREE, getpid());
 
-				//opening file with name within "buf"
+				//opening file 
 				if ((f_in = fopen(ENTREE, "rb")) == NULL) {	//b because binary
 					die("Probleme ouverture fichier\n");
 				}
@@ -117,8 +113,7 @@ int main(int argc, char *argv[]) {
 				len = ftell(f_in);
 				id_lastfrag = (int) (len / (FRAGLEN - 6)) + 1;
 				printf("Taille: %d\n", len);
-				printf("Nb de fragments: %d" ANSI_COLOR_RESET"\n\n",
-						id_lastfrag);
+				printf("Nb de fragments: %d" ANSI_COLOR_RESET"\n\n",id_lastfrag);
 				fseek(f_in, 0, SEEK_SET);
 
 				//printf("getting the time...\n");
@@ -136,7 +131,7 @@ int main(int argc, char *argv[]) {
 
 				//printf("initial: %d\n",INITIAL_CWND);
 				cwnd = INITIAL_CWND; //sending first INITIAL_CWND
-				RTT_msec = INITIAL_RTT_MSEC; //waits INITIAL_RTT_MSEC for timeout
+				RTT_microsec = INITIAL_RTT_MICROSEC; //waits INITIAL_RTT_MICROSEC for timeout
 
 				//printf("Init graphs...\n");				
 				graph = (int*) malloc(sizeof(int) * 100000);
@@ -152,23 +147,19 @@ int main(int argc, char *argv[]) {
 
 					//first display
 					if (firstprint_SS == 0) {
-						printf(
-								ANSI_COLOR_YELLOW "Sending data..."ANSI_COLOR_RESET"\n");
+						printf(ANSI_COLOR_YELLOW "Sending data..."ANSI_COLOR_RESET"\n");
 						firstprint_SS = -1;
 					}
 
 					//sending cwnd-1 fragments
 					while (flightSize < cwnd) {
-						//printf("\nwhile begins\n");
-
+						
 						//sending normally
 						if (lastACK == 0 || lastACK >= id_frag) {
-							//printf("normal\n");
 							id_frag++;
 						}
 						//resending the lost fragment
 						else {
-							//printf("resend\n");
 							id_frag = lastACK + 1;
 							//printf(ANSI_COLOR_GREEN"SENT: %d" ANSI_COLOR_RESET"\n",id_frag);
 						}
@@ -176,7 +167,6 @@ int main(int argc, char *argv[]) {
 						//resetting the last ACK received as 0 because sending data mode...
 						lastACK = 0;
 
-						//printf("seeking %d\n...",id_frag);
 						//getting the fragment to send
 						read = seek(message, data, id_frag, id_lastfrag, len);
 
@@ -189,48 +179,37 @@ int main(int argc, char *argv[]) {
 							memcpy(res + 6, message, FRAGLEN - 6);
 
 							//sending fragments while the threshold isn't reached
-							sent = send_message(s, res, read + 6,
-									(struct sockaddr *) &si_other, slen);
-							//printf("sent: id_%d of %d\n",id_frag,sent);
-
+							sent = send_message(s, res, read + 6,(struct sockaddr *) &si_other, slen);
+							
 							flightSize++;
-
-							//useful for graph (only if the file is smaller than 10Mo
-							if (loopCounter < sizeof(int) * 100000) {
-								//printf("we update graph[%d] to %d\n",loopCounter,graph[loopCounter]);
+							
+							if (loopCounter < 100000) { //to not get out of int* graph borders
 								graph[loopCounter] = id_frag;
-								//printf("graph[%d] = %d\n",loopCounter,graph[loopCounter]);
 								loopCounter++;
 							}
-
 							//useful for RTT
 							//printf("getting time...\n");
 							if (set_time == -1) {
 								gettimeofday(&start, NULL);
 								set_time = 0;
 							}
-							//printf("getting time ok!\n");
+							
 						} else {
 							//printf("EOF reached!\n");
 							id_frag--;
 							break;
 						}
-
-						//printf("end of while, flightSize: %d cwnd: %d \n",flightSize,cwnd);
 					}
-
 					//reading the receiving buffer while there are the ACK
 					do {
-						recv = rcv_msg_timeout(s, buf,
-								(struct sockaddr *) &si_other, &slen, RTT_msec);
-						currentACK = atoi(index(buf, 'K') + 1);
+						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen, RTT_microsec);
+						currentACK = getACK(buf,6);
 						//printf("prec: %d  suiv: %d\n",lastACK,atoi(index(buf, 'K') + 1));
 
 						if (lastACK < currentACK && currentACK > oldACK)
 							lastACK = currentACK;
 
-						if (loopCounterACK < sizeof(int) * 100000) {
-							//printf("On fait graphACK[%d] égal à %d\n",loopCounterACK,graph[loopCounterACK]);
+						if (loopCounterACK < 100000) { //to not get out of int* graph borders200000) { //to not get out of int* graphACK borders
 							graphACK[loopCounterACK] = currentACK;
 							//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
 							loopCounterACK++;
@@ -256,9 +235,8 @@ int main(int argc, char *argv[]) {
 						printf("%d fragments ACK-ed\n", nb_ACK);
 						printf("lastsent: %d\n", id_frag);
 						printf("lastACK: %d\n", lastACK);
-
 					}
-
+					
 					//if it's ok
 					if (lastACK >= id_frag)
 						cwnd += nb_ACK;
@@ -266,58 +244,42 @@ int main(int argc, char *argv[]) {
 					else {
 						cwnd = INITIAL_CWND;
 					}
-
+					
+					
 					//if there are new ACK received
-					if ((nb_ACK > 0 || lastACK == 0)
-							&& (delta = ((((end.tv_sec - start.tv_sec) * 1000.0f
-									+ (end.tv_usec - start.tv_usec) / 1000.0f)
-									/ 1000.0f)) * 1000 / (nb_ACK)) < 500
-							&& delta > 0) {
-						RTT_msec = delta;
+					if ((nb_ACK > 0 || lastACK == 0) && (delta = ((((end.tv_sec - start.tv_sec) * 1000.0f+ (end.tv_usec - start.tv_usec) / 1000.0f)/ 1000.0f)) * 1000 / (nb_ACK)) < 500 && delta > 0) {
+						RTT_microsec = (int) (delta*1000);
 					}
-
+					
 					//RTT display (decrease the throughput x2 !!!!)
-					//printf(ANSI_COLOR_RED "RTT: %lf msec" ANSI_COLOR_RESET "\n",RTT_msec );
+					//rintf(ANSI_COLOR_RED "RTT: %d µsec" ANSI_COLOR_RESET "\n",RTT_microsec );
 
 					//ready to send
 					flightSize = 0;
 					oldACK = lastACK;
-
-					//printf(ANSI_COLOR_RED "Sending again..." ANSI_COLOR_RESET "\n");
-
+					
 					//if EOF
 					if (lastACK == id_lastfrag) {
 						//printf(ANSI_COLOR_GREEN"BREAK!!!!!!" ANSI_COLOR_RESET"\n");
 						break;
 					}
-
+					
 					//end of while
 				}
 
 				//sending the final fragment with END
 				send_message(s, "FIN", 4, (struct sockaddr *) &si_other, slen);
-				delta = ((end.tv_sec - beginread.tv_sec) * 1000.0f
-						+ (end.tv_usec - beginread.tv_usec) / 1000.0f)
-						/ 1000.0f;
+				delta = ((end.tv_sec - beginread.tv_sec) * 1000.0f+ (end.tv_usec - beginread.tv_usec) / 1000.0f)/ 1000.0f;
 
 				//printf("\nvery last ACK: %d\n", lastACK);
-				printf(
-						ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyé\n",
-						(float) len / 1000);
-				printf(
-						"Dernier RTT: " ANSI_COLOR_RED"%lf" ANSI_COLOR_BLUE" msec\n",
-						RTT_msec);
-				printf(
-						"Durée d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",
-						delta);
-				printf(
-						"Débit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",
-						len / (1024 * delta));
+				printf(ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyé\n",	(float) len / 1000);
+				printf("Dernier RTT: " ANSI_COLOR_RED"%f" ANSI_COLOR_BLUE" µsec\n",RTT_microsec);
+				printf("Durée d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",delta);
+				printf("Débit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",len / (1024 * delta));
 
 				//receiving the very last(s) ACK
 				do {
-					recv = rcv_msg_timeout(s, buf,
-							(struct sockaddr *) &si_other, &slen, 1);
+					recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen, 1);
 					graphACK[loopCounterACK] = lastACK;
 					//printf("graphACK[%d] = %d\n",loopCounterACK,graph[loopCounterACK]);
 					loopCounterACK++;
@@ -329,28 +291,23 @@ int main(int argc, char *argv[]) {
 				//displayGraph(graph,sizeof(int) * 100000 *id_lastfrag);
 				//displayGraph(graphACK,sizeof(int) *100000* id_lastfrag);
 
-				outGraph(f_in, graph, sizeof(int) * 100000 * id_lastfrag,
-						"graph.txt");
+				outGraph(f_in, graph, sizeof(int) * 100000 * id_lastfrag,"graph.txt");
 				fclose(f_in);
-				outGraph(f_in, graphACK, sizeof(int) * 100000 * id_lastfrag,
-						"graphACK.txt");
+				outGraph(f_in, graphACK, sizeof(int) * 100000 * id_lastfrag,"graphACK.txt");
 				fclose(f_in);
 
 				printf("Terminé!" ANSI_COLOR_RESET"\n\n");
 
-			} else {
+			/*} else {
 				if (strcmp(" ", ENTREE) != 0 && strcmp("", ENTREE) != 0) {
-					send_message(s, "FIN", 4, (struct sockaddr *) &si_other,
-							slen);
-					printf(
-							ANSI_COLOR_RED"Le fichier '%s' n'existe pas." ANSI_COLOR_RESET"\n",
-							ENTREE);
+					send_message(s, "FIN", 4, (struct sockaddr *) &si_other, slen);
+					printf(ANSI_COLOR_RED"Le fichier '%s' n'existe pas." ANSI_COLOR_RESET"\n",ENTREE);
 					delete(buf, strlen(buf));
 
 				} else {
 					printf("Pourquoi envoyer du vide?\n");
 				}
-			}
+			}*/
 
 			//cleaning up every malloc for graphs
 			free(graph);
@@ -361,7 +318,7 @@ int main(int argc, char *argv[]) {
 			close(s);
 			kill(getpid(), SIGINT);
 
-		}
+	}
 	}
 	close(s);
 
