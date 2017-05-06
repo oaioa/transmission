@@ -9,8 +9,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define SERVER "127.0.0.2"
-#define FRAGLEN 1500 //Max length of ONE fragment from server: 1500
+#define SERVER "83.155.137.51"
+
+//Max length of ONE fragment from server: 1500
+//Ethernet frame bytes (fixed) = 18
+//IP header (min) = 20
+//UDP header (fixed) = 8
+//Max. allowed payload for no fragmentation = 1472
+#define FRAGLEN 1472
 #define BUFLEN 10000000  //Max length of server buffer: 10Mo
 #define INITIAL_RTT_MICROSEC 100000
 

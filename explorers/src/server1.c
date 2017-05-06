@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 	int pid_fils = -1;
 	int compare = 1; // il y a une difference
 	FILE * f_in;
-	int id_frag = 0, lastACK = 0, id_lastfrag = 0, oldACK = 0, nb_ACK = 0, firstprint_SS = 0, currentACK = 0;
+	int id_frag = 0, lastACK = 0,zeroACK=0, id_lastfrag = 0, oldACK = 0, nb_ACK = 0, firstprint_SS = 0, currentACK = 0;
 	int read = FRAGLEN, sent = 0, recv = 0, len = 0;
 	char * ENTREE = (char*) malloc(sizeof(char) * FRAGLEN); //what server is sending
 	char* data;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 	int flightSize = 0; //data that has been sent, but not yet acknowledged
 	int PORT = 0, PORT2 = 0;
 	int INITIAL_CWND = 0;
-
+	int maxWnd = 200;
 	//useful for graphs
 	int *graph;
 	int loopCounter = 0;
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 
 					//printf("PERE %d de port %d\n", getpid(), PORT);
 					sprintf(message, "SYN-ACK%d", PORT2);
-					sleep(1);
+					usleep(100000);
 					send_message(s, message, 15, (struct sockaddr *) &si_other,slen);
 					compare = 1;
 					continue;
@@ -250,12 +250,42 @@ int main(int argc, char *argv[]) {
 						set_time = -1;
 					}
 
+					//if it's ok
+					if (lastACK == id_frag){
+							if(cwnd>=maxWnd/2){
+							cwnd ++;
+						}
+						else{
+						cwnd += nb_ACK;
+						}
+					}
+					//if it's not ok
+					else {
+						if(cwnd>INITIAL_CWND){
+							cwnd = INITIAL_CWND;
+						}
+					}
+
 					//if there's no new ACK
 					if (lastACK == 0)
 						lastACK = oldACK;
 
 					//getting the nb of new ACK
 					nb_ACK = lastACK - oldACK;
+
+					if(nb_ACK==0){
+						zeroACK++;
+					}
+					else{
+						zeroACK=0;
+					}
+					if(zeroACK>10){
+						zeroACK = 0;
+						maxWnd=cwnd;
+						if(cwnd>1){
+							cwnd = cwnd/2;
+						}
+					}
 
 					if (argc == 2) {
 						printf("\n");
@@ -264,16 +294,10 @@ int main(int argc, char *argv[]) {
 						printf("lastsent: %d\n", id_frag);
 						printf("lastACK: %d\n", lastACK);
 					}
-					
-					//if it's ok
-					if (lastACK >= id_frag)
-						cwnd += nb_ACK;
-					//if it's not ok
-					else {
-						cwnd = INITIAL_CWND;
-					}
-					
-					
+
+
+
+
 					//if there are new ACK received
 					if ((nb_ACK > 0 || lastACK == 0) && (delta = ((((end.tv_sec - start.tv_sec) * 1000.0f+ (end.tv_usec - start.tv_usec) / 1000.0f)/ 1000.0f)) * 1000 / (nb_ACK)) < 500 && delta > 0) {
 						RTT_microsec = (int) (delta*1000);
