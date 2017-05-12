@@ -1,8 +1,3 @@
-/*
- Simple udp server
- http://www.binarytides.com/programming-udp-sockets-c-linux/
- */
-
 #include "useful.h"
 
 int main(int argc, char *argv[]) {
@@ -36,21 +31,9 @@ int main(int argc, char *argv[]) {
 	int INITIAL_CWND = 0;
 	int maxWnd = 200;
 
-	/*//useful for graphs
-	 int *graph;
-	 int loopCounter = 0;
-	 int *graphACK;
-	 int loopCounterACK = 0;
-	 int digit = 0, oldDigit = 0;
-	 //abscisse of graphs: time
-	 struct timeval stopgraph, stopgraphACK;
-	 double *deltagraph, *deltagraphACK;
-	 double tmpTimeGraph = 0;
-	 */
-
 	if (argc < 2) {
 		printf(
-				ANSI_COLOR_RED "./server1-explorers server_port" ANSI_COLOR_RESET"\n");
+		ANSI_COLOR_RED "./server1-explorers server_port" ANSI_COLOR_RESET"\n");
 		exit(1);
 	} else {
 		PORT = atoi(argv[1]);
@@ -68,6 +51,7 @@ int main(int argc, char *argv[]) {
 	if (create_server(&s, &si_me, PORT) != 0) {
 		die("Error on creating first server\n");
 	}
+
 	printf("Je suis le process %d \n", getpid());
 	//we clean up the buffer
 	delete(buf, sizeof(buf));
@@ -77,7 +61,7 @@ int main(int argc, char *argv[]) {
 
 		receive_message(s, buf, (struct sockaddr *) &si_other, &slen);
 		printf(
-				ANSI_COLOR_YELLOW "Recu par le process %d : %s" ANSI_COLOR_RESET "\n",
+		ANSI_COLOR_YELLOW "Recu par le process %d : %s" ANSI_COLOR_RESET "\n",
 				getpid(), buf);
 
 		//accepting connexion process... 
@@ -99,7 +83,7 @@ int main(int argc, char *argv[]) {
 
 					//printf("PERE %d de port %d\n", getpid(), PORT);
 					sprintf(message, "SYN-ACK%d", PORT2);
-					usleep(10000);
+					//usleep(10000);
 					send_message(s, message, 15, (struct sockaddr *) &si_other,
 							slen);
 					compare = 1;
@@ -117,7 +101,7 @@ int main(int argc, char *argv[]) {
 			//opening file 
 			if ((f_in = fopen(ENTREE, "rb")) == NULL) {	//b because binary
 				printf(
-						ANSI_COLOR_RED "Fichier %s inexistant." ANSI_COLOR_RESET "\n",
+				ANSI_COLOR_RED "Fichier %s inexistant." ANSI_COLOR_RESET "\n",
 						ENTREE);
 				send_message(s, "FIN", 4, (struct sockaddr *) &si_other, slen);
 
@@ -232,6 +216,9 @@ int main(int argc, char *argv[]) {
 						set_time = -1;
 					}
 
+					//getting the nb of new ACK
+					nb_ACK = lastACK - oldACK;
+
 					//if it's ok
 					if (lastACK == id_frag) {
 						if (cwnd >= maxWnd / 2) {
@@ -244,6 +231,9 @@ int main(int argc, char *argv[]) {
 					else {
 						if (cwnd >= INITIAL_CWND) {
 							cwnd = cwnd / 2;
+
+							//bourrin on
+							//cwnd = INITIAL_CWND;
 						}
 					}
 
@@ -251,8 +241,6 @@ int main(int argc, char *argv[]) {
 					if (lastACK == 0)
 						lastACK = oldACK;
 
-					//getting the nb of new ACK
-					nb_ACK = lastACK - oldACK;
 
 					if (nb_ACK == 0) {
 						zeroACK++;
@@ -329,7 +317,7 @@ int main(int argc, char *argv[]) {
 
 				delete(buf, strlen(buf));
 
-				printf("Terminé !!" ANSI_COLOR_RESET"\n\n");
+				printf("Terminé !!!" ANSI_COLOR_RESET"\n\n");
 
 				free(res);
 
