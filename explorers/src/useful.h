@@ -15,8 +15,8 @@
 //Ethernet frame bytes (fixed) = 18
 //IP header (min) = 20
 //UDP header (fixed) = 8
-//Max. allowed payload for no fragmentation = 1472
-#define FRAGLEN 1472
+//Max. allowed payload for no fragmentation = 1500
+#define FRAGLEN 1500
 #define BUFLEN 10000000  //Max length of server buffer: 10Mo
 #define INITIAL_RTT_MICROSEC 100000
 

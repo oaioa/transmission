@@ -1,0 +1,22 @@
+Client1 (pas sur tmp):
+-0.25Mo: 450Ko/s
+-0.5Mo: 630Ko/s
+-1Mo: 800ko/s
+-2Mo: 900ko/s
+-4Mo: 950ko/s
+-8Mo: 1Mo/s
+-16Mo: 1Mo/s
+-32Mo: 1Mo/s
+-64Mo: 1Mo/s
+
+Client1 (sur tmp):
+-0.25Mo: 700Ko/s
+-0.5Mo: 1Mo/s
+-1Mo: 1.7Mo/s
+-2Mo: 2.1Mo/s MAIS le FIN pas toujours reçu
+-4Mo:
+-8Mo:
+-16Mo:
+-32Mo:
+-64Mo: 
+
