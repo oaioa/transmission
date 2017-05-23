@@ -112,7 +112,10 @@ int create_server(int *s, struct sockaddr_in* si_me, int port){
     (*si_me).sin_addr.s_addr = htonl(INADDR_ANY);
     res++; //-1
 	
-
+	//enable the reusing (avoids bind problem)
+	int on = 1;
+	setsockopt(*s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	
     //bind socket to port
     if( bind(*s , (struct sockaddr*)si_me, sizeof(*si_me) ) == -1)
     {

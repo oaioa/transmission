@@ -224,13 +224,13 @@ int main(int argc, char *argv[]) {
 					//getting the nb of new ACK
 					nb_ACK = lastACK - oldACK;
 
-					if (argc == 2) {
+					/*if (argc == 2) {
 						printf("\n");
 						printf("%d fragments sent\n", flightSize);
 						printf("%d fragments ACK-ed\n", nb_ACK);
 						printf("lastsent: %d\n", id_frag);
 						printf("lastACK: %d\n", lastACK);
-					}
+					}*/
 					
 					//ready to send
 					flightSize = 0;
