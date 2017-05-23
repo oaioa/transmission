@@ -12,15 +12,13 @@ int main(int argc, char *argv[]) {
 	int pid_fils = -1;
 	int compare = 1; // il y a une difference
 	FILE * f_in;
-	int id_frag = 0, lastACK = 0, zeroACK = 0, id_lastfrag = 0, oldACK = 0,
-			nb_ACK = 0, firstprint_SS = 0, currentACK = 0;
+	int id_frag = 0, lastACK = 0, zeroACK = 0, id_lastfrag = 0, oldACK = 0, nb_ACK = 0, firstprint_SS = 0, currentACK = 0;
 	int read = FRAGLEN, sent = 0, recv = 0, len = 0;
 	char * ENTREE = (char*) malloc(sizeof(char) * FRAGLEN); //what server is sending
 	char* data;
 
 	struct timeval end, start, beginread;
 	int RTT_microsec = 0;
-	int *adaptive_RTT_microsec = &RTT_microsec;
 	double delta = 0;
 	void *res = (void*) malloc(sizeof(char) * FRAGLEN + 7); //what's finally sent (id_frag + data)
 	int set_time = -1;
@@ -40,7 +38,7 @@ int main(int argc, char *argv[]) {
 		PORT = atoi(argv[1]);
 		if (PORT > 1023 && PORT < 9999) {
 			PORT2 = PORT;
-			printf("Port: %d\n", PORT);
+			printf(ANSI_COLOR_RED"Port: %d "ANSI_COLOR_RESET "\n", PORT);
 		} else {
 			printf(ANSI_COLOR_RED"Error: 1023 < server_port < 9999! " ANSI_COLOR_RESET"\n");
 			exit(1);
@@ -52,8 +50,7 @@ int main(int argc, char *argv[]) {
 		die("Error on creating first server\n");
 	}
 
-	printf("Numéro de process %d \n", getpid());
-	printf("Adresse IP: %s\n",SERVER);
+	printf("Numero de process %d \n", getpid());
 	//we clean up the buffer
 	delete(buf, sizeof(buf));
 
@@ -61,9 +58,7 @@ int main(int argc, char *argv[]) {
 	while (1) {
 
 		receive_message(s, buf, (struct sockaddr *) &si_other, &slen);
-		printf(
-		ANSI_COLOR_YELLOW "Recu par le process %d : %s" ANSI_COLOR_RESET "\n",
-				getpid(), buf);
+		printf(ANSI_COLOR_YELLOW "Recu par le process %d : %s" ANSI_COLOR_RESET "\n",getpid(), buf);
 
 		//accepting connexion process... 
 		if (compare != 0) {
@@ -84,9 +79,7 @@ int main(int argc, char *argv[]) {
 
 					//printf("PERE %d de port %d\n", getpid(), PORT);
 					sprintf(message, "SYN-ACK%d", PORT2);
-					//usleep(10000);
-					send_message(s, message, 15, (struct sockaddr *) &si_other,
-							slen);
+					send_message(s, message, 15, (struct sockaddr *) &si_other, slen);
 					compare = 1;
 					continue;
 
@@ -106,8 +99,7 @@ int main(int argc, char *argv[]) {
 				send_message(s, "FIN", 4, (struct sockaddr *) &si_other, slen);
 
 			} else {
-				printf(ANSI_COLOR_BLUE"\nEnvoi du fichier %s par %d...\n",
-						ENTREE, getpid());
+				printf(ANSI_COLOR_BLUE"\nEnvoi du fichier %s par %d...\n",ENTREE, getpid());
 
 				fseek(f_in, 0, SEEK_END);
 				len = ftell(f_in);
@@ -124,19 +116,22 @@ int main(int argc, char *argv[]) {
 				//At the beginning of sending mode
 				if (len <= 25600) {	//0.25Mo
 					INITIAL_CWND = id_lastfrag;
-					*adaptive_RTT_microsec = 3 * (*adaptive_RTT_microsec);
 				} else if (len <= 512000) {	//0.5Mo
 					INITIAL_CWND = 100;
-					*adaptive_RTT_microsec = 10 * (*adaptive_RTT_microsec);
-				} else {	//1Mo or more
+				} else if (len <= 15360000){ // 1Mo<length<15Mo
 					INITIAL_CWND = 200;
-					*adaptive_RTT_microsec = 10 * (*adaptive_RTT_microsec);
+				} else if (len <= 61440000) { // 15Mo<length<60Mo
+					INITIAL_CWND = 300;
+				} else if (len <= 307200000) { // 15Mo<length<300Mo
+					INITIAL_CWND = 400;	
+				} else if (len <= 614400000) { // 300Mo<length<600Mo
+					INITIAL_CWND = 500;		
+				} else{ // 600Mo<length<1Go
+					INITIAL_CWND = 600;		
 				}
-
 				//printf("initial: %d\n",INITIAL_CWND);
 				cwnd = INITIAL_CWND; //sending first INITIAL_CWND
-				RTT_microsec = INITIAL_RTT_MICROSEC; //waits INITIAL_RTT_MICROSEC for timeout
-
+				
 				//copy completely the file inside a very big buffer
 				data = (char*) malloc(sizeof(char) * len);
 				fread(data, 1, len, f_in);
@@ -146,8 +141,7 @@ int main(int argc, char *argv[]) {
 
 					//first display
 					if (firstprint_SS == 0) {
-						printf(
-								ANSI_COLOR_YELLOW "Envoi du fichier en cours..."ANSI_COLOR_RESET"\n");
+						printf(ANSI_COLOR_YELLOW "Envoi du fichier en cours..."ANSI_COLOR_RESET"\n");
 						firstprint_SS = -1;
 					}
 
@@ -179,8 +173,7 @@ int main(int argc, char *argv[]) {
 							memcpy(res + 6, message, FRAGLEN - 6);
 
 							//sending fragments while the threshold isn't reached
-							sent = send_message(s, res, read + 6,
-									(struct sockaddr *) &si_other, slen);
+							sent = send_message(s, res, read + 6,(struct sockaddr *) &si_other, slen);
 
 							flightSize++;
 
@@ -201,7 +194,7 @@ int main(int argc, char *argv[]) {
 					}
 					//reading the receiving buffer while there are the ACK
 					do {
-						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen, (*adaptive_RTT_microsec));
+						recv = rcv_msg_timeout(s, buf,(struct sockaddr *) &si_other, &slen, 500); //adaptive reception
 						currentACK = getACK(buf, 6);
 						//printf("prec: %d  suiv: %d\n",lastACK,atoi(index(buf, 'K') + 1));
 
@@ -216,21 +209,14 @@ int main(int argc, char *argv[]) {
 					}
 
 					//if it's ok
-					if (lastACK == id_frag) {
+					if (lastACK >= id_frag) {
 						cwnd += nb_ACK;
 					}
 					//if it's not ok
-					else if (lastACK > id_frag) {
+					else {
 						cwnd = INITIAL_CWND;
-					} else {
-						cwnd = id_frag - lastACK;
 					}
 					
-					
-					//if we have reached the last frag to send but it's not received
-					if (id_frag == id_lastfrag && lastACK<id_frag) 
-						cwnd = 2;
-
 					//if there's no new ACK
 					if (lastACK == 0)
 						lastACK = oldACK;
@@ -245,19 +231,7 @@ int main(int argc, char *argv[]) {
 						printf("lastsent: %d\n", id_frag);
 						printf("lastACK: %d\n", lastACK);
 					}
-
-					//if there are new ACK received
-					if ((nb_ACK > 0 || lastACK == 0)
-							&& (delta = ((((end.tv_sec - start.tv_sec) * 1000.0f
-									+ (end.tv_usec - start.tv_usec) / 1000.0f)
-									/ 1000.0f)) * 1000 / (nb_ACK)) < 500
-							&& delta > 0) {
-						RTT_microsec = (int) (delta * 1000);
-					}
-
-					//RTT display (decrease the throughput x2 !!!!)
-					//printf(ANSI_COLOR_RED "RTT: %d Âµsec" ANSI_COLOR_RESET "\n",RTT_microsec );
-
+					
 					//ready to send
 					flightSize = 0;
 					oldACK = lastACK;
@@ -281,20 +255,21 @@ int main(int argc, char *argv[]) {
 					send_message(s, "FIN", 4, (struct sockaddr *) &si_other, slen);
 				} while (recv > 0);
 				
-				//resending the final fragments (10 FIN)
-				for (i= 0 ; i<10;i++){
+				//resending the final fragments (many many times to make sure the client ends)
+				i=0;
+				do{
 					send_message(s, "FIN", 4, (struct sockaddr *) &si_other, slen);
-				}
+					i++;
+				}while(i<10000);
 
 				delete(buf, strlen(buf));
 				
 				
 				//printf("\nvery last ACK: %d\n", lastACK);
 				printf(ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyÃ©\n",(float) len / 1000);
-				printf("Dernier RTT: " ANSI_COLOR_RED"%d " ANSI_COLOR_BLUE"Âµsec\n",RTT_microsec);
-				printf("Durée d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",delta);
-				printf("Débit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",	len / (1024 * delta));
-				printf("Envoi terminé." ANSI_COLOR_RESET"\n\n");
+				printf("Duree d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",delta);
+				printf("Debit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",	len / (1024 * delta));
+				printf("Envoi du processe %d terminé!" ANSI_COLOR_RESET"\n\n",getpid());
 
 				free(res);
 
@@ -302,7 +277,7 @@ int main(int argc, char *argv[]) {
 
 			//killing the socket and the process reserved to the current gone client
 			close(s);
-			kill(getpid(), SIGINT);
+			exit(1);
 
 		}
 	}

@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define SERVER "83.155.137.51"
+#define SERVER "127.0.0.2"
 
 //Max length of ONE fragment from server: 1500
 //Ethernet frame bytes (fixed) = 18
@@ -410,4 +410,5 @@ int digitAfterComa(double tmpTime){
 	return n;
 	
 }
+
 
