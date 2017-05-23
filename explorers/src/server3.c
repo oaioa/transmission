@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
 	int s; //socket
 	int slen = sizeof(si_other);
 	char *buf = (char*) malloc(sizeof(char) * BUFLEN); //recu
-	char *message = (char*) malloc(sizeof(char) * FRAGLEN); //envoyé
+	char *message = (char*) malloc(sizeof(char) * FRAGLEN); //envoyÃ©
 	int i, j; //filling the temporary little buffer
 	int c; //useful to get the char in the file
 	int pid_fils = -1;
@@ -266,10 +266,10 @@ int main(int argc, char *argv[]) {
 				
 				
 				//printf("\nvery last ACK: %d\n", lastACK);
-				printf(ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyé\n",(float) len / 1000);
+				printf(ANSI_COLOR_BLUE"\nFichier de taille " ANSI_COLOR_RED" %f" ANSI_COLOR_BLUE" Ko envoyÃ©\n",(float) len / 1000);
 				printf("Duree d'envoi: " ANSI_COLOR_RED"%fsec " ANSI_COLOR_BLUE"\n",delta);
 				printf("Debit moyen: "ANSI_COLOR_RED "%f Ko/s" ANSI_COLOR_BLUE"\n",	len / (1024 * delta));
-				printf("Envoi termin�! (process %d)" ANSI_COLOR_RESET"\n\n",getpid());
+				printf("Envoi terminé! (process %d)" ANSI_COLOR_RESET"\n\n",getpid());
 
 				free(res);
 
